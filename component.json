@@ -1,0 +1,15 @@
+{
+  "name": "static-router",
+  "repo": "anthonyshort/static-router",
+  "description": "Simple router to match URLs and fire callbacks without pushState. Designed for content sites who want an easy way to initialize code.",
+  "version": "0.0.1",
+  "keywords": [ "router" ],
+  "dependencies": {
+    "component/emitter": "*"
+  },
+  "development": {},
+  "license": "MIT",
+  "scripts": [
+    "index.js"
+  ]
+}
