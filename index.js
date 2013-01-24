@@ -2,7 +2,7 @@
 // parts of route strings.
 var optionalParam = /\((.*?)\)/g;
 var namedParam    = /(\(\?)?:\w+/g;
-var splatParam    = /\*\w+/g;
+var splatParam    = /\*/g;
 var escapeRegExp  = /[\-{}\[\]+?.,\\\^$|#\s]/g;
 
 // Cached regex for stripping a leading hash/slash and trailing space.
@@ -14,14 +14,11 @@ var rootStripper = /^\/+|\/+$/g;
 // Cached regex for removing a trailing slash.
 var trailingSlash = /\/$/;
 
-function Router() {
-  this._callbacks = {};
-  this.location = window.location;
-  this.handlers = [];
-
-  // Normalize root to always include a leading and trailing slash.
-  this.root = options.root || '/';
-  this.root = ('/' + this.root + '/').replace(rootStripper, '/');
+function Router(options) {
+  options = options || {};
+  this._handlers = [];
+  this.setRoot(options.root || '/');
+  this.setUrl(options.url || window.location.pathname);
 }
 
 // Convert a route as a string into a Regex object
@@ -36,18 +33,13 @@ Router.prototype._routeToRegExp = function(route) {
   return new RegExp('^' + route + '$');
 };
 
-// Attempt to load the current URL fragment. If a route succeeds with a
-// match, returns `true`. If no defined routes matches the fragment,
-// returns `false`.
-Router.prototype.loadUrl = function(fragmentOverride) {
-  var fragment = fragmentOverride || this.getFragment();
-  var matched = _.any(this.handlers, function(handler) {
-    if (handler.route.test(fragment)) {
-      handler.callback(fragment);
-      return true;
-    }
-  });
-  return matched;
+// Set the root URL for all routes
+Router.prototype.setRoot = function(url) {
+  this.root = this._normalizeUrl(url);
+};
+
+Router.prototype.setUrl = function(url) {
+  this.url = this._normalizeUrl(url);
 };
 
 // Given a route, and a URL fragment that it matches, return the array of
@@ -56,16 +48,29 @@ Router.prototype._extractParameters = function(route, fragment) {
   return route.exec(fragment).slice(1);
 };
 
-Router.prototype.getFragment = function() {
-  var fragment = this.location.pathname;
-  var root = this.root.replace(trailingSlash, '');
-  if (!fragment.indexOf(root)) fragment = fragment.substr(root.length);
-  return fragment.replace(routeStripper, '');
+// Makes sure all urls have a leading slash and no trailing slash
+// Used to normalize all urls so we always know the format
+Router.prototype._normalizeUrl = function(url) {
+  return ('/' + url + '/').replace(rootStripper, '/');
 };
 
+Router.prototype.getFragment = function() {
+  var fragment = this.url;
+  var root = this.root.replace(trailingSlash, '');
+  if (!fragment.indexOf(root)) fragment = fragment.substr(root.length);
+  return fragment.replace(trailingSlash, '');
+};
+
+// Add a route and a callback. The callback won't
+// be fired immediately but when the router is started
 Router.prototype.route = function(route, callback) {
-  route = routeToRegExp(route);
-  this.loadUrl();
+  var fragment = this.getFragment();
+  var routeRegex = this._routeToRegExp(route);
+
+  if ( routeRegex.test(fragment) ) {
+    var args = this._extractParameters(routeRegex, fragment);
+    callback.apply(this, args);
+  }
 };
 
 module.exports = Router;
