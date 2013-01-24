@@ -9,20 +9,20 @@
 
 ## API
 
-   var Router = require('static-router');
-   var router = new Router();
-
-   router.route('/welcome', function(){
-    alert('Welcome page!');
-   });
-
-   router.route('/profile/:user', function(user){
-    console.log(user);
-   });
-
-   router.route('/profile/*', function(){
-    console.log('match anything after profile!');
-   });
+    var Router = require('static-router');
+    var router = new Router();
+    
+    router.route('/welcome', function(){
+      alert('Welcome page!');
+    });
+    
+    router.route('/profile/:user', function(user){
+      console.log(user);
+    });
+    
+    router.route('/profile/*', function(){
+      console.log('match anything after profile!');
+    });
 
 ## License
 
